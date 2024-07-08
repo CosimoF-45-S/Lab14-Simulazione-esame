@@ -18,6 +18,22 @@ class DAO():
         return result
 
     @staticmethod
+    def getNodesDueZ():
+        cnx = DBConnect.get_connection()
+
+        cursor = cnx.cursor()
+        query = """ select distinct c.Localization  from classification c  """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        result = []
+        for row in rows:
+            result.append(row[0])
+        cursor.close()
+        cnx.close()
+        return result
+
+
+    @staticmethod
     def getEdges():
         cnx = DBConnect.get_connection()
 
@@ -33,6 +49,25 @@ class DAO():
                     and g2.Chromosome <> 0
                 order by g1.Chromosome ) as t
                 group by c_1, c_2"""
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        result = []
+        for row in rows:
+            result.append([row[0], row[1], row[2]])
+        cursor.close()
+        cnx.close()
+        return result
+
+    @staticmethod
+    def getEdgesDueZ():
+        cnx = DBConnect.get_connection()
+
+        cursor = cnx.cursor()
+        query = """select distinct c1.Localization, c2.Localization, count(distinct i.`Type`)  from classification c1 
+                    left join classification c2 on c2.Localization != c1.Localization, interactions i
+                    where c1.Localization < c2.Localization and ((c1.GeneID = i.GeneID1 and c2.GeneID = i.GeneID2) or
+                    (c1.GeneID = i.GeneID2 and c2.GeneID = i.GeneID1))
+                    group by c1.Localization, c2.Localization """
         cursor.execute(query)
         rows = cursor.fetchall()
         result = []
