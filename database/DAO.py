@@ -78,6 +78,44 @@ class DAO():
         return result
 
     @staticmethod
+    def getNodesTreZ():
+        cnx = DBConnect.get_connection()
+
+        cursor = cnx.cursor()
+        query = """select distinct g.GeneID from genes g where g.Essential = 'Essential'"""
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        result = []
+        for row in rows:
+            result.append(row[0])
+        cursor.close()
+        cnx.close()
+        return result
+
+
+    @staticmethod
+    def getEdgesTreZ():
+        cnx = DBConnect.get_connection()
+
+        cursor = cnx.cursor()
+        query = """select g1.geneID as g1, g2.geneID as g2, g1.Chromosome as g1C, g2.Chromosome as g2C, sum(i.Expression_Corr)
+                    from genes g1 join genes g2
+                    join interactions i on ((i.GeneID1 = g1.geneID and i.GeneID2 = g2.GeneID) or (i.GeneID2 = g1.geneID and i.GeneID1 = g2.GeneID))
+                    where g2.GeneID != g1.GeneID and g2.Essential = 'Essential' and g1.Essential = 'Essential' and g1.GeneID < g2.GeneID 
+                    group by g1, g2, g1C, g2C"""
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        result = []
+        for row in rows:
+            if row[2] == row[3]:
+                result.append([row[0], row[1], 2*row[4]])
+            else:
+                result.append([row[0], row[1], row[4]])
+        cursor.close()
+        cnx.close()
+        return result
+
+    @staticmethod
     def getWeightTo(node1, node2):
         cnx = DBConnect.get_connection()
 
